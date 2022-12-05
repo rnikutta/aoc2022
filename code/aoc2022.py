@@ -1,4 +1,5 @@
 import math
+import re
 import numpy as np
 
 def day01a(inp='../inputs/01a.dat'):
@@ -215,3 +216,68 @@ def day04b(inp='../inputs/d04a_test.dat'):
            ncontained += 1
 
     return sections, ncontained
+
+
+def day05ab(nlines=3,inp='../inputs/d05a_test.dat',cargolifter=9000):
+    
+    def readinp(inp,nlines):
+
+        # stack
+        lines = []
+        with open(inp,'r') as f:
+            for j in range(nlines):
+                line = f.readline().rstrip('\n')
+                lines.append(line)
+
+        # remove brackets
+        lines = [_.replace('[','') for _ in lines]
+        lines = [_.replace(']','') for _ in lines]
+
+        # sub '-' for empty position
+        lines = [_.replace('    ',' - ').replace(' ','') for _ in lines]
+
+        # create stacks
+        n = len(lines[0])
+        stacks = {}
+        for j in range(n):
+            stack = ''.join([_[j] for _ in lines])
+            stack = stack.replace('-','')
+            stacks[j+1] = stack
+        
+        # operations
+        ops = []
+        pattern = re.compile('move (\d+) from (\d+) to (\d+)')
+        with open(inp,'r') as f:
+            for op in f:
+                if op.startswith('move'):
+                    res = pattern.findall(op)
+                    print(res)
+                    ops.append([int(_) for _ in res[0]])
+                
+        return lines, stacks, ops
+
+    lines, stacks, ops = readinp(inp,nlines)
+
+
+    # perform all ops
+    for op in ops:
+        number, source, target = op
+        source_stack = stacks[source]
+        target_stack = stacks[target]
+
+        cargo = source_stack[:number]
+        source_stack = source_stack[number:]
+
+        if cargolifter == 9000:
+            target_stack = cargo[::-1] + target_stack
+        elif cargolifter == 9001:
+            target_stack = cargo + target_stack
+            
+        stacks[source] = source_stack
+        stacks[target] = target_stack
+
+    final = ''.join([_[0] for _ in stacks.values()])
+    print(final)
+    
+    return lines, stacks, ops, final
+
