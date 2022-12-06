@@ -1,5 +1,6 @@
 import math
 import re
+from collections import deque
 import numpy as np
 
 def day01a(inp='../inputs/01a.dat'):
@@ -280,4 +281,21 @@ def day05ab(nlines=3,inp='../inputs/d05a_test.dat',cargolifter=9000):
     print(final)
     
     return lines, stacks, ops, final
+
+
+def day06a(inp='../inputs/d06a.dat',nchars=4):
+    
+    with open(inp,'r') as f:
+        s = f.readline().strip()
+
+    buf = deque(maxlen=nchars)
+    counter = 0
+    for c in s:
+        buf.append(c)
+        counter += 1
+        if len(set(buf)) == nchars:
+            print(buf, counter)
+            break
+
+    return counter
 
