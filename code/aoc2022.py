@@ -3,6 +3,9 @@ import re
 from collections import deque
 import numpy as np
 
+import anytree
+from anytree import AnyNode, RenderTree
+
 def day01a(inp='../inputs/01a.dat'):
 
     d = {}
@@ -299,3 +302,56 @@ def day06a(inp='../inputs/d06a.dat',nchars=4):
 
     return counter
 
+
+def day07ab(inp='../inputs/d07a.dat'):
+
+    # read input, construct tree
+    root = AnyNode(id='root')
+    
+    with open(inp,'r') as f:
+        for line in f:
+            line = line.strip()
+            print(line)
+            if line == '$ cd /':
+                node = root
+
+            elif line == '$ ls' or line.startswith('dir '):
+                pass
+
+            elif line[0] in ('0','1','2','3','4','5','6','7','8','9'):
+                size, fname = line.split(' ')
+                size = int(size)
+                leaf = AnyNode(id=fname,size=size,parent=node)
+
+            elif line == '$ cd ..':
+                node = node.parent
+                
+            elif line.startswith('$ cd'):
+                d = line.split(' ')[2]
+                node = AnyNode(id=d,parent=node)
+                
+    # puzzle A: find all dirs with each under 100,000 size
+
+    # find all nodes that are dirs
+    dirs = anytree.search.findall(root, filter_=lambda node: not hasattr(node,"size"))
+
+    dirsizes = {}
+    for d in dirs:
+        files = anytree.search.findall(d, filter_=lambda node: hasattr(node,"size"))
+        dirsizes[d.id] = sum([f.size for f in files])
+    
+    # for each dir node, find all nodes that are files; aggregate their sizes
+    resultA = sum([v for k,v in dirsizes.items() if v <= 100000])
+
+
+    # puzzle B
+    total_space = 70000000
+    needed_space = 30000000
+    used_space = dirsizes["root"]
+    unused_space = total_space - used_space
+    needed_diff = needed_space - unused_space
+
+    candidates = [v for v in dirsizes.values() if v >= needed_diff]
+    resultB = min(candidates)
+
+    return root, dirs, resultA, resultB
