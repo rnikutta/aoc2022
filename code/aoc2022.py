@@ -355,3 +355,156 @@ def day07ab(inp='../inputs/d07a.dat'):
     resultB = min(candidates)
 
     return root, dirs, resultA, resultB
+
+
+def day08ab(inp='../inputs/d08a_test.dat'):
+    with open(inp,'r') as f:
+        lines = f.readlines()
+
+
+    nx, ny = len(lines), len(lines[0].strip())
+    a = np.zeros((nx,ny),dtype=int)
+
+    for j in range(len(lines)):
+        a[j,:] = [int(_) for _ in lines[j].strip()]
+
+
+    # puzzle A
+    nouter = nx*2 + (ny-2)*2
+    ninner = 0
+
+    # brute force loop over all x,y
+    for ix in range(1,nx-1):
+        for iy in range(1,ny-1):
+            thistree = a[ix,iy]
+            
+            # look left
+            if (max(a[:ix,iy]) < thistree) or\
+               (max(a[ix+1:,iy]) < thistree) or\
+               (max(a[ix,:iy]) < thistree) or\
+               (max(a[ix,iy+1:]) < thistree):
+                ninner += 1
+                next
+
+
+    # puzzle B
+    def get_scenic_score(ix_,iy_):
+        thistree = a[ix,iy]
+        
+        # look up
+        ntrees = []
+
+        def along_los(los):
+            lostrees = 0
+            for e in los:
+                if e < thistree:
+                    lostrees += 1
+                elif e >= thistree:
+                    lostrees += 1
+                    break
+
+            return lostrees
+
+        los = a[ix-1::-1,iy] # look up, starting and including the current location
+        ntrees.append(along_los(los))
+
+        los = a[ix+1:,iy] # look down
+        ntrees.append(along_los(los))
+
+        los = a[ix,iy-1::-1] # look left
+        ntrees.append(along_los(los))
+
+        los = a[ix,iy+1:] # look right
+        ntrees.append(along_los(los))
+
+#        print("ntrees:", ntrees)
+#        print("ix_,iy_,thistree,losu,ntrees:",ix_,iy_,thistree,los,ntrees)
+#        print()
+        
+        return np.product(ntrees)
+
+    
+    scenic_scores = np.zeros((nx,ny),dtype=int)
+    for ix in range(1,nx-1):
+        for iy in range(1,ny-1):
+            scenic_scores[ix,iy] = get_scenic_score(ix,iy)
+        
+    return a, nouter, ninner, nouter+ninner, scenic_scores, np.max(scenic_scores)
+
+
+def day9a(inp='../inputs/d09a_test.dat'):
+    with open(inp,'r') as f:
+        lines = f.readlines()
+
+    Hx, Hy = 0, 0
+    Tx, Ty = 0, 0
+
+    tvisited = [ ]
+    
+    for line in lines:
+        op, n = line.strip().split()
+
+        # move H
+        for j in range(int(n)):
+            if op == 'R':
+                Hx += 1
+            elif op == 'L':
+                Hx -= 1
+            elif op == 'U':
+                Hy += 1
+            elif op == 'D':
+                Hy -= 1
+
+            # update T
+            if (abs(Hx-Tx)>1) or (abs(Hy-Ty)>1):
+                Tx += np.sign(Hx-Tx)
+                Ty += np.sign(Hy-Ty)
+
+
+#            print("  ", (Tx,Ty))
+            tvisited.append((Tx,Ty))
+            
+#        print()
+
+    return tvisited, len(set(tvisited))
+
+
+def day9b(inp='../inputs/d09a_test.dat',nknots=10):
+
+    with open(inp,'r') as f:
+        lines = f.readlines()
+
+
+    pos = np.zeros((nknots,2),dtype=int)  # 10 knots, 2 positions each (x,y)
+    
+    tvisited = [ ]
+    
+    for line in lines:
+#P        print(line.strip())
+        op, n = line.strip().split()
+
+        # move H
+        for j in range(int(n)):
+#P            print("  ",j)
+            if op == 'R':
+                pos[0,0] += 1
+            elif op == 'L':
+                pos[0,0] -= 1
+            elif op == 'U':
+                pos[0,1] += 1
+            elif op == 'D':
+                pos[0,1] -= 1
+
+            # update N-1 trailing knots
+            for k in range(1,nknots):
+#P                print("    ",k)
+                if (abs(pos[k-1,0]-pos[k,0])>1) or (abs(pos[k-1,1]-pos[k,1])>1):
+                    pos[k,0] += np.sign(pos[k-1,0]-pos[k,0])
+                    pos[k,1] += np.sign(pos[k-1,1]-pos[k,1])
+
+#P                print(pos)
+
+            tvisited.append((pos[-1,0],pos[-1,1]))
+
+    return tvisited, len(set(tvisited))
+
