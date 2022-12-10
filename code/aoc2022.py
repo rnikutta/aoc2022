@@ -474,18 +474,15 @@ def day9b(inp='../inputs/d09a_test.dat',nknots=10):
     with open(inp,'r') as f:
         lines = f.readlines()
 
-
     pos = np.zeros((nknots,2),dtype=int)  # 10 knots, 2 positions each (x,y)
     
     tvisited = [ ]
     
     for line in lines:
-#P        print(line.strip())
         op, n = line.strip().split()
 
         # move H
         for j in range(int(n)):
-#P            print("  ",j)
             if op == 'R':
                 pos[0,0] += 1
             elif op == 'L':
@@ -497,14 +494,88 @@ def day9b(inp='../inputs/d09a_test.dat',nknots=10):
 
             # update N-1 trailing knots
             for k in range(1,nknots):
-#P                print("    ",k)
                 if (abs(pos[k-1,0]-pos[k,0])>1) or (abs(pos[k-1,1]-pos[k,1])>1):
                     pos[k,0] += np.sign(pos[k-1,0]-pos[k,0])
                     pos[k,1] += np.sign(pos[k-1,1]-pos[k,1])
-
-#P                print(pos)
 
             tvisited.append((pos[-1,0],pos[-1,1]))
 
     return tvisited, len(set(tvisited))
 
+
+def day10a(inp='../inputs/d10a_test.dat'):
+
+    Xinit = 1
+    X = []
+    
+    with open(inp,'r') as f:
+        c = 0
+        for line in f:
+            res = line.split()
+            if c == 0:
+                X.append(Xinit)
+            if len(res) == 1:
+                X.append(X[-1])
+            elif len(res) == 2:
+                X += [X[-1]]
+                X += [X[-1]+int(res[1])]
+
+            c += 1
+
+    cycles = [20,60,100,140,180,220]
+    sum6 = sum([X[c-1]*c for c in cycles])
+            
+    return X, sum6
+
+
+def day10b(inp='../inputs/d10a_test.dat'):
+
+    crt = np.zeros(6*40,dtype=int)
+
+    # data reading and construction of X exactly as in day10a()
+    Xinit = 1
+    X = []
+    
+    with open(inp,'r') as f:
+        c = 0
+        for line in f:
+            res = line.split()
+            if c == 0:
+                X.append(Xinit)
+            if len(res) == 1:
+                X.append(X[-1])
+            elif len(res) == 2:
+                X += [X[-1]]
+                X += [X[-1]+int(res[1])]
+
+            c += 1
+
+    # now draw on the crt screen; we realize that the crt is just a
+    # 1-D array of 240 elements; reshaping into 6 rows only happens at
+    # the end
+    for j in range(0,len(X)-1):
+        center = X[j]  # center position of the 3-wide sprite
+        currentrow = j // 40  # X gives the sprite position, but only along a repeating 0..39 line; we need to introduce crt line skipping
+        center = center + currentrow*40
+        spritepos = list(range(center-1,center+2))
+
+        # draw (or not) on the crt line
+        if j in spritepos:
+            crt[j] = 1
+        else:
+            crt[j] = 0
+    
+    # reshape single crt line to a rectangle 6x40
+    crtr = crt.reshape(6,40)
+
+    # Converts ones to # and zeros to space, print rows
+    for j in range(crtr.shape[0]):
+        row = "".join([str(_) for _ in crtr[j,:]])
+        row = row.replace('1','#')
+        row = row.replace('0',' ')
+        print(row)
+    
+    return X, crt, crtr
+
+
+    
